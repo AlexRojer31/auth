@@ -8,6 +8,8 @@ import { User } from 'src/common/user/user.entity';
 import { Session } from 'src/common/session/session.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
+import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
+import { SuccessAuth } from './interfaces/success-auth/success-auth.interface';
 
 @Injectable()
 export class AuthorizationService {
@@ -25,12 +27,12 @@ export class AuthorizationService {
     password: string,
     ip: string | undefined,
     userAgent: string | undefined,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     if (ip === undefined) ip = '0.0.0.0';
     if (userAgent === undefined) userAgent = 'unknown';
-    if (await this.chechEmail(email))
+    if (await this.users.checkEmail(email))
       throw new HttpException('Email is already taken', HttpStatus.BAD_REQUEST);
-    if (await this.chechLogin(login))
+    if (await this.users.checkLogin(login))
       throw new HttpException('Login is already taken', HttpStatus.BAD_REQUEST);
 
     const user = await this.createUser(email, login, password);
@@ -77,13 +79,13 @@ export class AuthorizationService {
       secret: this.config.get<string>('SECRET_KEY') ?? 'local',
     });
 
-    return JSON.stringify({
-      id: user.id,
-      accessToken: accessToken,
-      accessTokenExpire: exp,
-      refreshToken: refreshToken,
-      refreshTokenExpire: expRefresh,
-    });
+    return this.getSuccessAuth(
+      user.id,
+      accessToken,
+      exp,
+      refreshToken,
+      expRefresh,
+    );
   }
 
   public async login(
@@ -118,14 +120,6 @@ export class AuthorizationService {
       ip: ip,
       userAgent: userAgent,
     });
-  }
-
-  private async chechEmail(email: string): Promise<boolean> {
-    return Boolean(await this.users.findByEmail(email));
-  }
-
-  private async chechLogin(login: string): Promise<boolean> {
-    return Boolean(await this.users.findByLogin(login));
   }
 
   private async createUser(
@@ -166,7 +160,7 @@ export class AuthorizationService {
     exp: number,
     isRefresh: boolean = false,
     isService: boolean = false,
-  ): object {
+  ): JwtPayload {
     return {
       iss: 'auth',
       iat: iat,
@@ -199,5 +193,21 @@ export class AuthorizationService {
     }
 
     return iat + exp;
+  }
+
+  private getSuccessAuth(
+    userId: string,
+    accessToken: string,
+    accessTokenExpire: number,
+    refreshToken: string,
+    refreshTokenExpire: number,
+  ): SuccessAuth {
+    return {
+      id: userId,
+      accessToken: accessToken,
+      accessTokenExpire: accessTokenExpire,
+      refreshToken: refreshToken,
+      refreshTokenExpire: refreshTokenExpire,
+    };
   }
 }

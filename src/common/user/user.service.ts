@@ -27,4 +27,12 @@ export class UserService {
   public async save(user: User): Promise<User> {
     return this.repo.save(user);
   }
+
+  public async checkEmail(email: string): Promise<boolean> {
+    return Boolean(await this.findByEmail(email));
+  }
+
+  public async checkLogin(login: string): Promise<boolean> {
+    return Boolean(await this.findByLogin(login));
+  }
 }

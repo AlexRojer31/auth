@@ -16,6 +16,7 @@ import { AuthorizationService } from './authorization.service';
 import { RegistrationDto } from './dto/registration-dto/registration-dto';
 import { LoginDto } from './dto/login-dto/login-dto';
 import { RefreshDto } from './dto/refresh-dto/refresh-dto';
+import { SuccessAuth } from './interfaces/success-auth/success-auth.interface';
 
 @Controller('auth')
 export class AuthorizationController {
@@ -28,7 +29,7 @@ export class AuthorizationController {
     @Body() dto: RegistrationDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     return this.service.registration(
       dto.email,
       dto.login,
