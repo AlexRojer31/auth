@@ -9,6 +9,10 @@ import { ConfigService } from '@nestjs/config';
 export class GeneratorService {
   constructor(private configService: ConfigService) {}
 
+  public getUnixTimestamp(): number {
+    return Math.floor(new Date().getTime() / 1000);
+  }
+
   public getRandomNumber(): number {
     return Math.floor(Math.random() * 9);
   }
