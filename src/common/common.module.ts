@@ -9,7 +9,7 @@ import { User } from './user/user.entity';
 import { Session } from './session/session.entity';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [TypeOrmModule.forFeature([User, Session])],
   providers: [UserService, SessionService, GeneratorService],
   exports: [UserService, SessionService, GeneratorService],
 })

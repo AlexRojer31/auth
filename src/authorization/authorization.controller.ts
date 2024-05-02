@@ -23,32 +23,38 @@ export class AuthorizationController {
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
   public async registration(
-    @Body() registrationDto: RegistrationDto,
+    @Body() dto: RegistrationDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ): Promise<string> {
-    return this.service.registration(registrationDto, ip, userAgent);
+    return this.service.registration(
+      dto.email,
+      dto.login,
+      dto.password,
+      ip,
+      userAgent,
+    );
   }
 
   @Post('login')
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
   public async login(
-    @Body() loginDto: LoginDto,
+    @Body() dto: LoginDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ): Promise<string> {
-    return this.service.login(loginDto, ip, userAgent);
+    return this.service.login(dto.login, dto.password, ip, userAgent);
   }
 
   @Post('refresh')
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
   public async refresh(
-    @Body() refreshDto: RefreshDto,
+    @Body() dto: RefreshDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
   ): Promise<string> {
-    return this.service.refresh(refreshDto, ip, userAgent);
+    return this.service.refresh(dto.refreshToken, ip, userAgent);
   }
 }

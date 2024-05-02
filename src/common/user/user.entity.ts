@@ -52,4 +52,25 @@ export class User {
     comment: 'user password hash',
   })
   password: string;
+
+  @Column({
+    default: false,
+    nullable: false,
+    comment: 'is this user admin',
+  })
+  isAdmin: boolean;
+
+  @Column({
+    default: false,
+    nullable: false,
+    comment: 'is this user service',
+  })
+  isService: boolean;
+
+  @Column({
+    default: 0,
+    nullable: false,
+    comment: 'user accesses',
+  })
+  accesses: number;
 }
