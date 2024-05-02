@@ -3,11 +3,13 @@
 import {
   Body,
   Controller,
+  Get,
   Header,
   Headers,
   HttpCode,
   HttpStatus,
   Ip,
+  Param,
   Post,
 } from '@nestjs/common';
 import { AuthorizationService } from './authorization.service';

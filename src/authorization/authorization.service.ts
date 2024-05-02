@@ -1,15 +1,18 @@
 'use strict';
 
-import { Injectable } from '@nestjs/common';
+import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { SessionService } from 'src/common/session/session.service';
 import { UserService } from 'src/common/user/user.service';
-import { RefreshDto } from './dto/refresh-dto/refresh-dto';
+import { GeneratorService } from 'src/common/generator/generator.service';
+import { access } from 'fs';
+import { User } from 'src/common/user/user.entity';
 
 @Injectable()
 export class AuthorizationService {
   constructor(
     private users: UserService,
     private sessions: SessionService,
+    private generator: GeneratorService,
   ) {}
 
   public async registration(
@@ -21,15 +24,23 @@ export class AuthorizationService {
   ): Promise<string> {
     if (ip === undefined) ip = '0.0.0.0';
     if (userAgent === undefined) userAgent = 'unknown';
+    if (await this.chechEmail(email))
+      throw new HttpException('Email is already taken', HttpStatus.BAD_REQUEST);
+    if (await this.chechLogin(login))
+      throw new HttpException('Login is already taken', HttpStatus.BAD_REQUEST);
+
+    let user = new User();
+    user.email = email;
+    user.login = login;
+    user.password = this.generator.hash([login, password]);
+    user = await this.users.save(user);
 
     return JSON.stringify({
-      registrationDto: {
-        email: email,
-        login: login,
-        password: password,
-      },
-      ip: ip,
-      userAgent: userAgent,
+      id: user.id,
+      accessToken: 'asd',
+      accessTokenExpire: 1,
+      refreshToken: 'zxc',
+      refreshTokenExpire: 1,
     });
   }
 
@@ -65,5 +76,13 @@ export class AuthorizationService {
       ip: ip,
       userAgent: userAgent,
     });
+  }
+
+  private async chechEmail(email: string): Promise<boolean> {
+    return Boolean(await this.users.findByEmail(email));
+  }
+
+  private async chechLogin(login: string): Promise<boolean> {
+    return Boolean(await this.users.findByLogin(login));
   }
 }

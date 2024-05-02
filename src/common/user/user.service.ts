@@ -11,4 +11,20 @@ export class UserService {
     @InjectRepository(User)
     private readonly repo: Repository<User>,
   ) {}
+
+  public async findByEmail(email: string): Promise<User | null> {
+    return this.repo.findOneBy({
+      email: email,
+    });
+  }
+
+  public async findByLogin(login: string): Promise<User | null> {
+    return this.repo.findOneBy({
+      login: login,
+    });
+  }
+
+  public async save(user: User): Promise<User> {
+    return this.repo.save(user);
+  }
 }
