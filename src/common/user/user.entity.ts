@@ -28,7 +28,9 @@ export class User {
   })
   updated: Date;
 
-  @VersionColumn()
+  @VersionColumn({
+    comment: 'object version controll',
+  })
   version: number;
 
   @Column({
