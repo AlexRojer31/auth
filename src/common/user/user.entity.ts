@@ -1,0 +1,53 @@
+'use strict';
+
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+  VersionColumn,
+} from 'typeorm';
+
+@Entity({
+  name: 'users',
+})
+export class User {
+  @PrimaryGeneratedColumn('uuid', {
+    comment: 'unique user id by uuid',
+  })
+  id: string;
+
+  @CreateDateColumn({
+    comment: 'created date',
+  })
+  created: Date;
+
+  @UpdateDateColumn({
+    comment: 'updated date',
+  })
+  updated: Date;
+
+  @VersionColumn()
+  version: number;
+
+  @Column({
+    unique: true,
+    nullable: false,
+    comment: 'user email',
+  })
+  email: string;
+
+  @Column({
+    unique: true,
+    nullable: false,
+    comment: 'user login',
+  })
+  login: string;
+
+  @Column({
+    nullable: false,
+    comment: 'user password hash',
+  })
+  password: string;
+}
