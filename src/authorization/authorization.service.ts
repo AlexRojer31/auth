@@ -4,8 +4,10 @@ import { HttpException, HttpStatus, Injectable } from '@nestjs/common';
 import { SessionService } from 'src/common/session/session.service';
 import { UserService } from 'src/common/user/user.service';
 import { GeneratorService } from 'src/common/generator/generator.service';
-import { access } from 'fs';
 import { User } from 'src/common/user/user.entity';
+import { Session } from 'src/common/session/session.entity';
+import { JwtService } from '@nestjs/jwt';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthorizationService {
@@ -13,6 +15,8 @@ export class AuthorizationService {
     private users: UserService,
     private sessions: SessionService,
     private generator: GeneratorService,
+    private config: ConfigService,
+    private jwt: JwtService,
   ) {}
 
   public async registration(
@@ -29,18 +33,56 @@ export class AuthorizationService {
     if (await this.chechLogin(login))
       throw new HttpException('Login is already taken', HttpStatus.BAD_REQUEST);
 
-    let user = new User();
-    user.email = email;
-    user.login = login;
-    user.password = this.generator.hash([login, password]);
-    user = await this.users.save(user);
+    const user = await this.createUser(email, login, password);
+    if (!user)
+      throw new HttpException(
+        'Something went wrong, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const iat = this.getIat();
+    const exp = this.getExp(iat);
+    const expRefresh = this.getExp(iat, true);
+    const deviceHash = this.getDeviceHash(ip, userAgent);
+
+    const session = await this.createSession(user.id, deviceHash);
+    if (!session)
+      throw new HttpException(
+        'Something went wrong, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const payloadAccess = this.generatePayload(
+      iat,
+      user.id,
+      session.id,
+      deviceHash,
+      exp,
+      false,
+      user.isService,
+    );
+    const accessToken = await this.jwt.signAsync(payloadAccess, {
+      secret: this.config.get<string>('SECRET_KEY') ?? 'local',
+    });
+    const payloadRefresh = this.generatePayload(
+      iat,
+      user.id,
+      session.id,
+      deviceHash,
+      expRefresh,
+      true,
+      user.isService,
+    );
+    const refreshToken = await this.jwt.signAsync(payloadRefresh, {
+      secret: this.config.get<string>('SECRET_KEY') ?? 'local',
+    });
 
     return JSON.stringify({
       id: user.id,
-      accessToken: 'asd',
-      accessTokenExpire: 1,
-      refreshToken: 'zxc',
-      refreshTokenExpire: 1,
+      accessToken: accessToken,
+      accessTokenExpire: exp,
+      refreshToken: refreshToken,
+      refreshTokenExpire: expRefresh,
     });
   }
 
@@ -84,5 +126,78 @@ export class AuthorizationService {
 
   private async chechLogin(login: string): Promise<boolean> {
     return Boolean(await this.users.findByLogin(login));
+  }
+
+  private async createUser(
+    email: string,
+    login: string,
+    password: string,
+  ): Promise<User | null> {
+    let user = new User();
+    user.email = email;
+    user.login = login;
+    user.password = this.generator.hash([login, password]);
+    try {
+      return await this.users.save(user);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private async createSession(
+    userId: string,
+    deviceHash: string,
+  ): Promise<Session | null> {
+    let session = new Session();
+    session.uuid = userId;
+    session.deviceHash = deviceHash;
+    try {
+      return await this.sessions.save(session);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private generatePayload(
+    iat: number,
+    userId: string,
+    sessionId: string,
+    deviceHash: string,
+    exp: number,
+    isRefresh: boolean = false,
+    isService: boolean = false,
+  ): object {
+    return {
+      iss: 'auth',
+      iat: iat,
+      sub: isRefresh ? 'refreshToken' : 'accessToken',
+      aud: {
+        client: isService ? 'service' : 'user',
+        userId: userId,
+        sessionId: sessionId,
+        deviceHash: deviceHash,
+        mixin: this.generator.getRandomNumbersString(32),
+      },
+      exp: exp,
+    };
+  }
+
+  private getDeviceHash(ip: string, userAgent: string): string {
+    return this.generator.hash([ip, userAgent]);
+  }
+
+  private getIat(): number {
+    return +this.generator.getUnixTimestamp();
+  }
+
+  private getExp(iat: number, isRefresh: boolean = false): number {
+    let exp = 0;
+    if (isRefresh) {
+      exp = +(this.config.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS') ?? 0);
+    } else {
+      exp = +(this.config.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS') ?? 0);
+    }
+
+    return iat + exp;
   }
 }

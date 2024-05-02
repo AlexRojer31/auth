@@ -11,4 +11,8 @@ export class SessionService {
     @InjectRepository(Session)
     private readonly repo: Repository<Session>,
   ) {}
+
+  public async save(session: Session): Promise<Session> {
+    return this.repo.save(session);
+  }
 }

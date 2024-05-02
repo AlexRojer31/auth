@@ -48,6 +48,7 @@ export class User {
   login: string;
 
   @Column({
+    type: 'text',
     nullable: false,
     comment: 'user password hash',
   })

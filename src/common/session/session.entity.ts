@@ -47,11 +47,4 @@ export class Session {
     comment: 'device hash',
   })
   deviceHash: string;
-
-  @Column({
-    type: 'text',
-    nullable: false,
-    comment: 'refresh token',
-  })
-  refreshToken: string;
 }
