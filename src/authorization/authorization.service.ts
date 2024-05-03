@@ -131,15 +131,53 @@ export class AuthorizationService {
     refreshToken: string,
     ip: string | undefined,
     userAgent: string | undefined,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     if (ip === undefined) ip = '0.0.0.0';
     if (userAgent === undefined) userAgent = 'unknown';
 
-    return JSON.stringify({
-      refreshToken: refreshToken,
-      ip: ip,
-      userAgent: userAgent,
-    });
+    const payload = await this.getPayload(refreshToken);
+    if (!payload)
+      throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
+
+    const session = await this.sessions.find(payload.aud.sessionId);
+    if (!session || session.mixin !== payload.aud.mixin)
+      throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
+
+    const user = await this.users.find(payload.aud.userId);
+    if (!user) throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
+
+    const baseStats = this.getBaseStats(ip, userAgent);
+    session.mixin = baseStats.mixin;
+    try {
+      const updatedSession = await this.sessions.save(session);
+
+      const accessToken = await this.getToken(
+        baseStats,
+        user.id,
+        updatedSession.id,
+        user.isService,
+      );
+      const newRefreshToken = await this.getToken(
+        baseStats,
+        user.id,
+        updatedSession.id,
+        user.isService,
+        true,
+      );
+
+      return this.getSuccessAuth(
+        user.id,
+        accessToken,
+        baseStats.exp,
+        newRefreshToken,
+        baseStats.expRefresh,
+      );
+    } catch (e) {
+      throw new HttpException(
+        'Something went wrong, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+    }
   }
 
   private async createUser(
@@ -181,6 +219,16 @@ export class AuthorizationService {
     session.mixin = mixin;
     try {
       return await this.sessions.save(session);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  private async getPayload(token: string): Promise<JwtPayload | null> {
+    try {
+      return await this.jwt.verifyAsync<JwtPayload>(token, {
+        secret: this.config.get<string>('SECRET_KEY') ?? 'local',
+      });
     } catch (e) {
       return null;
     }

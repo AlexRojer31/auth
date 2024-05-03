@@ -15,4 +15,10 @@ export class SessionService {
   public async save(session: Session): Promise<Session> {
     return this.repo.save(session);
   }
+
+  public async find(id: string): Promise<Session | null> {
+    return this.repo.findOneBy({
+      id: id,
+    });
+  }
 }

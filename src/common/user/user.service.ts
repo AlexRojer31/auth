@@ -35,4 +35,10 @@ export class UserService {
   public async checkLogin(login: string): Promise<boolean> {
     return Boolean(await this.findByLogin(login));
   }
+
+  public async find(id: string): Promise<User | null> {
+    return this.repo.findOneBy({
+      id: id,
+    });
+  }
 }

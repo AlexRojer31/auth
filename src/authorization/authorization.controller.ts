@@ -57,7 +57,7 @@ export class AuthorizationController {
     @Body() dto: RefreshDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     return this.service.refresh(dto.refreshToken, ip, userAgent);
   }
 }
