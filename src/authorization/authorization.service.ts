@@ -78,18 +78,43 @@ export class AuthorizationService {
     password: string,
     ip: string | undefined,
     userAgent: string | undefined,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     if (ip === undefined) ip = '0.0.0.0';
     if (userAgent === undefined) userAgent = 'unknown';
 
-    return JSON.stringify({
-      loginDto: {
-        login: login,
-        password: password,
-      },
-      ip: ip,
-      userAgent: userAgent,
-    });
+    const user = await this.users.findByLogin(login);
+    if (!user) throw new HttpException('Invalid login', HttpStatus.BAD_REQUEST);
+    if (!this.validatePasswordHash(login, password, user.password))
+      throw new HttpException('Invalid granted', HttpStatus.BAD_REQUEST);
+
+    const baseStats = this.getBaseStats(ip, userAgent);
+    const session = await this.createSession(user.id, baseStats.deviceHash);
+    if (!session)
+      throw new HttpException(
+        'Something went wrong, please try again',
+        HttpStatus.BAD_REQUEST,
+      );
+
+    const accessToken = await this.getAccesToken(
+      baseStats,
+      user.id,
+      session.id,
+      user.isService,
+    );
+    const refreshToken = await this.getRefreshToken(
+      baseStats,
+      user.id,
+      session.id,
+      user.isService,
+    );
+
+    return this.getSuccessAuth(
+      user.id,
+      accessToken,
+      baseStats.exp,
+      refreshToken,
+      baseStats.expRefresh,
+    );
   }
 
   public async refresh(
@@ -115,12 +140,24 @@ export class AuthorizationService {
     let user = new User();
     user.email = email;
     user.login = login;
-    user.password = this.generator.hash([login, password]);
+    user.password = this.generatePasswordHash(login, password);
     try {
       return await this.users.save(user);
     } catch (e) {
       return null;
     }
+  }
+
+  private generatePasswordHash(login: string, password: string): string {
+    return this.generator.hash([login, password]);
+  }
+
+  private validatePasswordHash(
+    login: string,
+    password: string,
+    hash: string,
+  ): boolean {
+    return this.generator.compare([login, password], hash);
   }
 
   private async createSession(

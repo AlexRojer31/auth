@@ -46,7 +46,7 @@ export class AuthorizationController {
     @Body() dto: LoginDto,
     @Ip() ip: string,
     @Headers('user-agent') userAgent: string,
-  ): Promise<string> {
+  ): Promise<SuccessAuth> {
     return this.service.login(dto.login, dto.password, ip, userAgent);
   }
 
