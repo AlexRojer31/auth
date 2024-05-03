@@ -5,4 +5,5 @@ export interface BaseStats {
   exp: number;
   expRefresh: number;
   deviceHash: string;
+  mixin: string;
 }

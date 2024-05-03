@@ -44,24 +44,29 @@ export class AuthorizationService {
       );
 
     const baseStats = this.getBaseStats(ip, userAgent);
-    const session = await this.createSession(user.id, baseStats.deviceHash);
+    const session = await this.createSession(
+      user.id,
+      baseStats.deviceHash,
+      baseStats.mixin,
+    );
     if (!session)
       throw new HttpException(
         'Something went wrong, please try again',
         HttpStatus.BAD_REQUEST,
       );
 
-    const accessToken = await this.getAccesToken(
+    const accessToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
       user.isService,
     );
-    const refreshToken = await this.getRefreshToken(
+    const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
       user.isService,
+      true,
     );
 
     return this.getSuccessAuth(
@@ -88,24 +93,29 @@ export class AuthorizationService {
       throw new HttpException('Invalid granted', HttpStatus.BAD_REQUEST);
 
     const baseStats = this.getBaseStats(ip, userAgent);
-    const session = await this.createSession(user.id, baseStats.deviceHash);
+    const session = await this.createSession(
+      user.id,
+      baseStats.deviceHash,
+      baseStats.mixin,
+    );
     if (!session)
       throw new HttpException(
         'Something went wrong, please try again',
         HttpStatus.BAD_REQUEST,
       );
 
-    const accessToken = await this.getAccesToken(
+    const accessToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
       user.isService,
     );
-    const refreshToken = await this.getRefreshToken(
+    const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
       user.isService,
+      true,
     );
 
     return this.getSuccessAuth(
@@ -163,10 +173,12 @@ export class AuthorizationService {
   private async createSession(
     userId: string,
     deviceHash: string,
+    mixin: string,
   ): Promise<Session | null> {
     let session = new Session();
     session.uuid = userId;
     session.deviceHash = deviceHash;
+    session.mixin = mixin;
     try {
       return await this.sessions.save(session);
     } catch (e) {
@@ -182,6 +194,7 @@ export class AuthorizationService {
     exp: number,
     isRefresh: boolean = false,
     isService: boolean = false,
+    mixin: string,
   ): JwtPayload {
     return {
       iss: 'auth',
@@ -192,17 +205,18 @@ export class AuthorizationService {
         userId: userId,
         sessionId: sessionId,
         deviceHash: deviceHash,
-        mixin: this.generator.getRandomNumbersString(32),
+        mixin: mixin,
       },
       exp: exp,
     };
   }
 
-  private async getAccesToken(
+  private async getToken(
     baseStats: BaseStats,
     userId: string,
     sessionId: string,
     isService: boolean,
+    isRefresh: boolean = false,
   ): Promise<string> {
     return this.jwt.signAsync(
       this.generatePayload(
@@ -210,31 +224,10 @@ export class AuthorizationService {
         userId,
         sessionId,
         baseStats.deviceHash,
-        baseStats.exp,
-        false,
+        !isRefresh ? baseStats.exp : baseStats.expRefresh,
+        isRefresh,
         isService,
-      ),
-      {
-        secret: this.config.get<string>('SECRET_KEY') ?? 'local',
-      },
-    );
-  }
-
-  private async getRefreshToken(
-    baseStats: BaseStats,
-    userId: string,
-    sessionId: string,
-    isService: boolean,
-  ): Promise<string> {
-    return this.jwt.signAsync(
-      this.generatePayload(
-        baseStats.iat,
-        userId,
-        sessionId,
-        baseStats.deviceHash,
-        baseStats.expRefresh,
-        true,
-        isService,
+        baseStats.mixin,
       ),
       {
         secret: this.config.get<string>('SECRET_KEY') ?? 'local',
@@ -249,6 +242,10 @@ export class AuthorizationService {
       exp: this.getExp(iat),
       expRefresh: this.getExp(iat, true),
       deviceHash: this.getDeviceHash(ip, userAgent),
+      mixin:
+        this.generator.getRandomNumbersString(32) +
+        '-' +
+        this.generator.generateUuid(),
     };
   }
 

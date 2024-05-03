@@ -47,4 +47,10 @@ export class Session {
     comment: 'device hash',
   })
   deviceHash: string;
+
+  @Column({
+    nullable: false,
+    comment: 'token mixin',
+  })
+  mixin: string;
 }
