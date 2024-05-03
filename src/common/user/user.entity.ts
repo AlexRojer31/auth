@@ -74,4 +74,24 @@ export class User {
     comment: 'user accesses',
   })
   accesses: number;
+
+  @Column({
+    default: 1,
+    nullable: false,
+    comment: 'is this user blocked',
+  })
+  loginAttempt: number;
+
+  @Column({
+    default: false,
+    nullable: false,
+    comment: 'is this user blocked',
+  })
+  isBlocked: boolean;
+
+  @Column({
+    nullable: true,
+    comment: 'blocked reason',
+  })
+  blockedReason: string;
 }
