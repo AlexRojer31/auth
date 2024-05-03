@@ -10,6 +10,7 @@ import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
 import { SuccessAuth } from './interfaces/success-auth/success-auth.interface';
+import { BaseStats } from './interfaces/base-stats/base-stats.interface';
 
 @Injectable()
 export class AuthorizationService {
@@ -42,49 +43,33 @@ export class AuthorizationService {
         HttpStatus.BAD_REQUEST,
       );
 
-    const iat = this.getIat();
-    const exp = this.getExp(iat);
-    const expRefresh = this.getExp(iat, true);
-    const deviceHash = this.getDeviceHash(ip, userAgent);
-
-    const session = await this.createSession(user.id, deviceHash);
+    const baseStats = this.getBaseStats(ip, userAgent);
+    const session = await this.createSession(user.id, baseStats.deviceHash);
     if (!session)
       throw new HttpException(
         'Something went wrong, please try again',
         HttpStatus.BAD_REQUEST,
       );
 
-    const payloadAccess = this.generatePayload(
-      iat,
+    const accessToken = await this.getAccesToken(
+      baseStats,
       user.id,
       session.id,
-      deviceHash,
-      exp,
-      false,
       user.isService,
     );
-    const accessToken = await this.jwt.signAsync(payloadAccess, {
-      secret: this.config.get<string>('SECRET_KEY') ?? 'local',
-    });
-    const payloadRefresh = this.generatePayload(
-      iat,
+    const refreshToken = await this.getRefreshToken(
+      baseStats,
       user.id,
       session.id,
-      deviceHash,
-      expRefresh,
-      true,
       user.isService,
     );
-    const refreshToken = await this.jwt.signAsync(payloadRefresh, {
-      secret: this.config.get<string>('SECRET_KEY') ?? 'local',
-    });
 
     return this.getSuccessAuth(
       user.id,
       accessToken,
-      exp,
+      baseStats.exp,
       refreshToken,
-      expRefresh,
+      baseStats.expRefresh,
     );
   }
 
@@ -173,6 +158,60 @@ export class AuthorizationService {
         mixin: this.generator.getRandomNumbersString(32),
       },
       exp: exp,
+    };
+  }
+
+  private async getAccesToken(
+    baseStats: BaseStats,
+    userId: string,
+    sessionId: string,
+    isService: boolean,
+  ): Promise<string> {
+    return this.jwt.signAsync(
+      this.generatePayload(
+        baseStats.iat,
+        userId,
+        sessionId,
+        baseStats.deviceHash,
+        baseStats.exp,
+        false,
+        isService,
+      ),
+      {
+        secret: this.config.get<string>('SECRET_KEY') ?? 'local',
+      },
+    );
+  }
+
+  private async getRefreshToken(
+    baseStats: BaseStats,
+    userId: string,
+    sessionId: string,
+    isService: boolean,
+  ): Promise<string> {
+    return this.jwt.signAsync(
+      this.generatePayload(
+        baseStats.iat,
+        userId,
+        sessionId,
+        baseStats.deviceHash,
+        baseStats.expRefresh,
+        true,
+        isService,
+      ),
+      {
+        secret: this.config.get<string>('SECRET_KEY') ?? 'local',
+      },
+    );
+  }
+
+  private getBaseStats(ip: string, userAgent: string): BaseStats {
+    const iat = this.getIat();
+    return {
+      iat: iat,
+      exp: this.getExp(iat),
+      expRefresh: this.getExp(iat, true),
+      deviceHash: this.getDeviceHash(ip, userAgent),
     };
   }
 
