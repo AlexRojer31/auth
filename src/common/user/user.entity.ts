@@ -76,7 +76,7 @@ export class User {
   accesses: number;
 
   @Column({
-    default: 1,
+    default: 0,
     nullable: false,
     comment: 'is this user blocked',
   })
