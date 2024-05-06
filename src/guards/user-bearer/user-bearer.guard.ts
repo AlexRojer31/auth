@@ -4,7 +4,7 @@ import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
 import { AuthService } from 'src/common/auth/auth.service';
 
 @Injectable()
-export class ServiceBearerGuard implements CanActivate {
+export class UserBearerGuard implements CanActivate {
   constructor(private auth: AuthService) {}
 
   public async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -26,7 +26,7 @@ export class ServiceBearerGuard implements CanActivate {
       }
       let token: string = authorization.split(' ')[1];
       if (ip && userAgent && token) {
-        return this.auth.checkServiceToken(token, userAgent, ip);
+        return this.auth.checkToken(token, userAgent, ip);
       }
 
       return false;

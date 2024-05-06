@@ -21,7 +21,7 @@ export class InfoController {
   @UseGuards(ServiceBearerGuard)
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
-  public async registration(@Body() dto: CheckTokenDto): Promise<boolean> {
+  public async checkToken(@Body() dto: CheckTokenDto): Promise<boolean> {
     return this.service.checkToken(dto.accessToken, dto.userAgent, dto.userIp);
   }
 }
