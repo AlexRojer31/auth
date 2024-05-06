@@ -59,13 +59,13 @@ export class AuthorizationService {
       baseStats,
       user.id,
       session.id,
-      user.isService,
+      this.users.isUserService(user),
     );
     const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
-      user.isService,
+      this.users.isUserService(user),
       true,
     );
 
@@ -108,13 +108,13 @@ export class AuthorizationService {
       baseStats,
       user.id,
       session.id,
-      user.isService,
+      this.users.isUserService(user),
     );
     const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
-      user.isService,
+      this.users.isUserService(user),
       true,
     );
 
@@ -155,13 +155,13 @@ export class AuthorizationService {
         baseStats,
         user.id,
         updatedSession.id,
-        user.isService,
+        this.users.isUserService(user),
       );
       const newRefreshToken = await this.getToken(
         baseStats,
         user.id,
         updatedSession.id,
-        user.isService,
+        this.users.isUserService(user),
         true,
       );
 

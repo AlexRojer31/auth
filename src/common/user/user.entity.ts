@@ -13,6 +13,9 @@ import {
   name: 'users',
 })
 export class User {
+  static IS_ADMIN = 1 << 30;
+  static IS_SERVICE = 1 << 29;
+
   @PrimaryGeneratedColumn('uuid', {
     comment: 'unique user id by uuid',
   })
@@ -55,43 +58,9 @@ export class User {
   password: string;
 
   @Column({
-    default: false,
-    nullable: false,
-    comment: 'is this user admin',
-  })
-  isAdmin: boolean;
-
-  @Column({
     default: 0,
     nullable: false,
     comment: 'user accesses',
   })
   accesses: number;
-
-  @Column({
-    default: false,
-    nullable: false,
-    comment: 'is this user service',
-  })
-  isService: boolean;
-
-  @Column({
-    default: 0,
-    nullable: false,
-    comment: 'login attempt count',
-  })
-  loginAttempt: number;
-
-  @Column({
-    default: null,
-    nullable: true,
-    comment: 'blocked to time',
-  })
-  blockedTo: Date;
-
-  @Column({
-    nullable: true,
-    comment: 'blocked reason',
-  })
-  blockedReason: string;
 }
