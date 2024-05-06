@@ -83,11 +83,11 @@ export class User {
   loginAttempt: number;
 
   @Column({
-    default: false,
-    nullable: false,
-    comment: 'is this user blocked',
+    default: null,
+    nullable: true,
+    comment: 'blocked to time',
   })
-  isBlocked: boolean;
+  blockedTo: Date;
 
   @Column({
     nullable: true,
