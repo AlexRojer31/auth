@@ -14,6 +14,45 @@ export class AuthService {
     private config: ConfigService,
   ) {}
 
+  public async checkToken(
+    token: string,
+    userAgent: string,
+    userIp: string,
+  ): Promise<boolean> {
+    const payload = await this.getPayload(token);
+    if (payload) return this.checkBaseTokenPayload(payload, userIp, userAgent);
+
+    return false;
+  }
+
+  public async checkServiceToken(
+    token: string,
+    userAgent: string,
+    userIp: string,
+  ): Promise<boolean> {
+    const payload = await this.getPayload(token);
+    if (payload)
+      return (
+        this.checkBaseTokenPayload(payload, userIp, userAgent) &&
+        payload.aud.client === 'service'
+      );
+
+    return false;
+  }
+
+  public checkBaseTokenPayload(
+    payload: JwtPayload,
+    userIp: string,
+    userAgent: string,
+  ): boolean {
+    const hash = this.getDeviceHash(userIp, userAgent);
+    return (
+      payload.aud.deviceHash === hash &&
+      payload.exp > this.getIat() &&
+      payload.sub === 'accessToken'
+    );
+  }
+
   public getDeviceHash(ip: string, userAgent: string): string {
     return this.generator.hash([ip, userAgent]);
   }

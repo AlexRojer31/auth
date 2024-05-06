@@ -7,15 +7,18 @@ import {
   HttpCode,
   HttpStatus,
   Post,
+  UseGuards,
 } from '@nestjs/common';
 import { InfoService } from './info.service';
 import { CheckTokenDto } from './dto/check-token-dto/check-token-dto';
+import { ServiceBearerGuard } from 'src/guards/service-bearer/service-bearer.guard';
 
 @Controller('info')
 export class InfoController {
   constructor(private service: InfoService) {}
 
   @Post('check-token')
+  @UseGuards(ServiceBearerGuard)
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
   public async registration(@Body() dto: CheckTokenDto): Promise<boolean> {
