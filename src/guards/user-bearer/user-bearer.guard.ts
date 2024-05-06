@@ -1,7 +1,7 @@
 'use strict';
 
 import { CanActivate, ExecutionContext, Injectable } from '@nestjs/common';
-import { AbstractBaseBearerGuard } from '../abstract-base-bearer/abstract-base-bearer.guard';
+import { AbstractBaseBearerGuard } from '../abstract-base-bearer-guard/abstract-base-bearer-guard';
 import { AuthService } from 'src/common/auth/auth.service';
 
 @Injectable()

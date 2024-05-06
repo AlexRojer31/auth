@@ -1,6 +1,6 @@
 'use strict';
 
-import { AbstractBaseBearerGuard } from './abstract-base-bearer.guard';
+import { AbstractBaseBearerGuard } from './abstract-base-bearer-guard';
 
 describe('AbstractBaseBearerGuard', () => {
   it('should be defined', () => {
