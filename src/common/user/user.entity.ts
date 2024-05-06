@@ -62,6 +62,13 @@ export class User {
   isAdmin: boolean;
 
   @Column({
+    default: 0,
+    nullable: false,
+    comment: 'user accesses',
+  })
+  accesses: number;
+
+  @Column({
     default: false,
     nullable: false,
     comment: 'is this user service',
@@ -71,14 +78,7 @@ export class User {
   @Column({
     default: 0,
     nullable: false,
-    comment: 'user accesses',
-  })
-  accesses: number;
-
-  @Column({
-    default: 0,
-    nullable: false,
-    comment: 'is this user blocked',
+    comment: 'login attempt count',
   })
   loginAttempt: number;
 
