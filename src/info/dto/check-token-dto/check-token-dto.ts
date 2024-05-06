@@ -1,6 +1,6 @@
 'use strict';
 
-import { IsJWT, IsNotEmpty, IsString } from 'class-validator';
+import { IsIP, IsJWT, IsNotEmpty, IsString } from 'class-validator';
 
 export class CheckTokenDto {
   @IsNotEmpty()
@@ -13,5 +13,6 @@ export class CheckTokenDto {
 
   @IsNotEmpty()
   @IsString()
+  @IsIP()
   readonly userIp: string;
 }

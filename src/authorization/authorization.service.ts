@@ -8,9 +8,10 @@ import { User } from 'src/common/user/user.entity';
 import { Session } from 'src/common/session/session.entity';
 import { JwtService } from '@nestjs/jwt';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
 import { SuccessAuth } from './interfaces/success-auth/success-auth.interface';
 import { BaseStats } from './interfaces/base-stats/base-stats.interface';
+import { JwtPayload } from 'src/common/auth/interfaces/jwt-payload/jwt-payload.interface';
+import { AuthService } from 'src/common/auth/auth.service';
 
 @Injectable()
 export class AuthorizationService {
@@ -20,6 +21,7 @@ export class AuthorizationService {
     private generator: GeneratorService,
     private config: ConfigService,
     private jwt: JwtService,
+    private auth: AuthService,
   ) {}
 
   public async registration(
@@ -135,7 +137,7 @@ export class AuthorizationService {
     if (ip === undefined) ip = '0.0.0.0';
     if (userAgent === undefined) userAgent = 'unknown';
 
-    const payload = await this.getPayload(refreshToken);
+    const payload = await this.auth.getPayload(refreshToken);
     if (!payload)
       throw new HttpException('Invalid token', HttpStatus.BAD_REQUEST);
 
@@ -224,16 +226,6 @@ export class AuthorizationService {
     }
   }
 
-  private async getPayload(token: string): Promise<JwtPayload | null> {
-    try {
-      return await this.jwt.verifyAsync<JwtPayload>(token, {
-        secret: this.config.get<string>('SECRET_KEY') ?? 'local',
-      });
-    } catch (e) {
-      return null;
-    }
-  }
-
   private generatePayload(
     iat: number,
     userId: string,
@@ -284,36 +276,17 @@ export class AuthorizationService {
   }
 
   private getBaseStats(ip: string, userAgent: string): BaseStats {
-    const iat = this.getIat();
+    const iat = this.auth.getIat();
     return {
       iat: iat,
-      exp: this.getExp(iat),
-      expRefresh: this.getExp(iat, true),
-      deviceHash: this.getDeviceHash(ip, userAgent),
+      exp: this.auth.getExp(iat),
+      expRefresh: this.auth.getExp(iat, true),
+      deviceHash: this.auth.getDeviceHash(ip, userAgent),
       mixin:
         this.generator.getRandomNumbersString(32) +
         '-' +
         this.generator.generateUuid(),
     };
-  }
-
-  private getDeviceHash(ip: string, userAgent: string): string {
-    return this.generator.hash([ip, userAgent]);
-  }
-
-  private getIat(): number {
-    return +this.generator.getUnixTimestamp();
-  }
-
-  private getExp(iat: number, isRefresh: boolean = false): number {
-    let exp = 0;
-    if (isRefresh) {
-      exp = +(this.config.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS') ?? 0);
-    } else {
-      exp = +(this.config.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS') ?? 0);
-    }
-
-    return iat + exp;
   }
 
   private getSuccessAuth(

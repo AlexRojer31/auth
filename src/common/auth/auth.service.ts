@@ -4,7 +4,7 @@ import { Injectable } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { GeneratorService } from '../generator/generator.service';
 import { ConfigService } from '@nestjs/config';
-import { JwtPayload } from 'src/authorization/interfaces/jwt-payload/jwt-payload.interface';
+import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
 
 @Injectable()
 export class AuthService {
@@ -26,5 +26,20 @@ export class AuthService {
     } catch (e) {
       return null;
     }
+  }
+
+  public getIat(): number {
+    return +this.generator.getUnixTimestamp();
+  }
+
+  public getExp(iat: number, isRefresh: boolean = false): number {
+    let exp = 0;
+    if (isRefresh) {
+      exp = +(this.config.get<number>('REFRESH_TOKEN_EXPIRE_SECONDS') ?? 0);
+    } else {
+      exp = +(this.config.get<number>('ACCESS_TOKEN_EXPIRE_SECONDS') ?? 0);
+    }
+
+    return iat + exp;
   }
 }
