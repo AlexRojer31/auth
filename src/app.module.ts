@@ -5,6 +5,7 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AuthorizationModule } from './authorization/authorization.module';
 import { CommonModule } from './common/common.module';
+import { InfoModule } from './info/info.module';
 
 @Module({
   imports: [
@@ -28,6 +29,7 @@ import { CommonModule } from './common/common.module';
     }),
     AuthorizationModule,
     CommonModule,
+    InfoModule,
   ],
   controllers: [],
   providers: [],
