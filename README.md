@@ -1,10 +1,10 @@
 ## Name
 
-Auth
+auth
 
 ## Description
 
-Service for issuing and validating access tokens
+service for issuing and validating access tokens
 
 ## Installation
 
