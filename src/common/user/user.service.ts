@@ -41,12 +41,4 @@ export class UserService {
       id: id,
     });
   }
-
-  public isUserService(user: User): boolean {
-    return (user.rights & User.IS_SERVICE) > 0;
-  }
-
-  public isUserAdmin(user: User): boolean {
-    return (user.rights & User.IS_ADMIN) > 0;
-  }
 }

@@ -5,8 +5,8 @@ export interface JwtPayload {
   iat: number;
   sub: string;
   aud: {
-    client: string;
     userId: string;
+    rights: number;
     sessionId: string;
     deviceHash: string;
     mixin: string;

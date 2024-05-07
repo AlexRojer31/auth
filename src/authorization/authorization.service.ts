@@ -61,13 +61,13 @@ export class AuthorizationService {
       baseStats,
       user.id,
       session.id,
-      this.users.isUserService(user),
+      user.rights,
     );
     const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
-      this.users.isUserService(user),
+      user.rights,
       true,
     );
 
@@ -110,13 +110,13 @@ export class AuthorizationService {
       baseStats,
       user.id,
       session.id,
-      this.users.isUserService(user),
+      user.rights,
     );
     const refreshToken = await this.getToken(
       baseStats,
       user.id,
       session.id,
-      this.users.isUserService(user),
+      user.rights,
       true,
     );
 
@@ -157,13 +157,13 @@ export class AuthorizationService {
         baseStats,
         user.id,
         updatedSession.id,
-        this.users.isUserService(user),
+        user.rights,
       );
       const newRefreshToken = await this.getToken(
         baseStats,
         user.id,
         updatedSession.id,
-        this.users.isUserService(user),
+        user.rights,
         true,
       );
 
@@ -233,7 +233,7 @@ export class AuthorizationService {
     deviceHash: string,
     exp: number,
     isRefresh: boolean = false,
-    isService: boolean = false,
+    rights: number = 0,
     mixin: string,
   ): JwtPayload {
     return {
@@ -241,8 +241,8 @@ export class AuthorizationService {
       iat: iat,
       sub: isRefresh ? 'refreshToken' : 'accessToken',
       aud: {
-        client: isService ? 'service' : 'user',
         userId: userId,
+        rights: rights,
         sessionId: sessionId,
         deviceHash: deviceHash,
         mixin: mixin,
@@ -255,7 +255,7 @@ export class AuthorizationService {
     baseStats: BaseStats,
     userId: string,
     sessionId: string,
-    isService: boolean,
+    rights: number,
     isRefresh: boolean = false,
   ): Promise<string> {
     return this.jwt.signAsync(
@@ -266,7 +266,7 @@ export class AuthorizationService {
         baseStats.deviceHash,
         !isRefresh ? baseStats.exp : baseStats.expRefresh,
         isRefresh,
-        isService,
+        rights,
         baseStats.mixin,
       ),
       {

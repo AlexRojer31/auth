@@ -13,9 +13,6 @@ import {
   name: 'users',
 })
 export class User {
-  static IS_ADMIN = 1 << 30;
-  static IS_SERVICE = 1 << 29;
-
   @PrimaryGeneratedColumn('uuid', {
     comment: 'unique user id by uuid',
   })

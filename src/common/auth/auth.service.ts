@@ -5,6 +5,7 @@ import { JwtService } from '@nestjs/jwt';
 import { GeneratorService } from '../generator/generator.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
+import { RightsService } from '../rights/rights.service';
 
 @Injectable()
 export class AuthService {
@@ -12,6 +13,7 @@ export class AuthService {
     private jwt: JwtService,
     private generator: GeneratorService,
     private config: ConfigService,
+    private rights: RightsService,
   ) {}
 
   public async checkToken(
@@ -34,7 +36,7 @@ export class AuthService {
     if (payload)
       return (
         this.checkBaseTokenPayload(payload, userIp, userAgent) &&
-        payload.aud.client === 'service'
+        this.rights.isService(payload.aud.rights)
       );
 
     return false;
