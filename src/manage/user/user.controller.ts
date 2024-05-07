@@ -10,7 +10,7 @@ import {
 } from '@nestjs/common';
 import { UserManagerService } from './user-manager/user-manager.service';
 import { UserBearerGuard } from 'src/guards/user-bearer/user-bearer.guard';
-import { BearerDecorator } from 'src/decorators/bearer-decorator/bearer-decorator.decorator';
+import { BearerToken } from 'src/decorators/bearer-token/bearer-token.decorator';
 
 @Controller('manage/user')
 export class UserController {
@@ -20,7 +20,7 @@ export class UserController {
   @UseGuards(UserBearerGuard)
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
-  public async logout(@BearerDecorator() token: string): Promise<boolean> {
+  public async logout(@BearerToken() token: string): Promise<boolean> {
     return this.service.logout(token);
   }
 
@@ -28,7 +28,7 @@ export class UserController {
   @UseGuards(UserBearerGuard)
   @HttpCode(HttpStatus.OK)
   @Header('Content-Type', 'application/json; charset=utf-8')
-  public async logoutAll(@BearerDecorator() token: string): Promise<boolean> {
+  public async logoutAll(@BearerToken() token: string): Promise<boolean> {
     return this.service.logout(token, true);
   }
 }
