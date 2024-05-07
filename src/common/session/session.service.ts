@@ -21,4 +21,16 @@ export class SessionService {
       id: id,
     });
   }
+
+  public async deleteById(id: string): Promise<any> {
+    return this.repo.delete({
+      id: id,
+    });
+  }
+
+  public async deleteByUuid(uuid: string): Promise<any> {
+    return this.repo.delete({
+      uuid: uuid,
+    });
+  }
 }

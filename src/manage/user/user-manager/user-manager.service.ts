@@ -1,13 +1,28 @@
 'use strict';
 
 import { Injectable } from '@nestjs/common';
-import { UserService } from 'src/common/user/user.service';
+import { AuthService } from 'src/common/auth/auth.service';
+import { SessionService } from 'src/common/session/session.service';
 
 @Injectable()
 export class UserManagerService {
-  constructor(private users: UserService) {}
+  constructor(
+    private sessions: SessionService,
+    private auth: AuthService,
+  ) {}
 
-  public async logout(all: boolean = false): Promise<boolean> {
-    return true;
+  public async logout(token: string, all: boolean = false): Promise<boolean> {
+    const payload = await this.auth.getPayload(token);
+    if (payload) {
+      if (all) {
+        this.sessions.deleteByUuid(payload.aud.userId);
+      } else {
+        this.sessions.deleteById(payload.aud.sessionId);
+      }
+
+      return true;
+    }
+
+    return false;
   }
 }
