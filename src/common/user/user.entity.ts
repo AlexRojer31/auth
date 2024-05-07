@@ -60,7 +60,7 @@ export class User {
   @Column({
     default: 0,
     nullable: false,
-    comment: 'user accesses',
+    comment: 'user rights',
   })
-  accesses: number;
+  rights: number;
 }
