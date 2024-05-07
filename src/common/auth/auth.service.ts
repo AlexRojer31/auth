@@ -6,6 +6,7 @@ import { GeneratorService } from '../generator/generator.service';
 import { ConfigService } from '@nestjs/config';
 import { JwtPayload } from './interfaces/jwt-payload/jwt-payload.interface';
 import { RightsService } from '../rights/rights.service';
+import { Right } from '../rights/right.enum';
 
 @Injectable()
 export class AuthService {
@@ -20,9 +21,23 @@ export class AuthService {
     token: string,
     userAgent: string,
     userIp: string,
+    rights: Right[] = [],
   ): Promise<boolean> {
     const payload = await this.getPayload(token);
-    if (payload) return this.checkBaseTokenPayload(payload, userIp, userAgent);
+    if (payload) {
+      const baseCheck = this.checkBaseTokenPayload(payload, userIp, userAgent);
+      if (rights.length === 0) return baseCheck;
+      let rightsControll = false;
+      const userRights = payload.aud.rights;
+      for (let i = 0; i < rights.length; i++) {
+        if (this.rights.checkRight(userRights, rights[i])) {
+          rightsControll = true;
+          break;
+        }
+      }
+
+      return baseCheck && rightsControll;
+    }
 
     return false;
   }
